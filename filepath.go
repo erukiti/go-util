@@ -10,7 +10,7 @@ import (
 
 func PathResolv(base string, s string) string {
 	var err error
-	if s[0] == '~' {
+	if len(s) > 0 && s[0] == '~' {
 		a := strings.Split(s, "/")
 		var usr *user.User
 		if a[0] == "~" {
