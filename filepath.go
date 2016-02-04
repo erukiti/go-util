@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/user"
@@ -8,22 +9,44 @@ import (
 	"strings"
 )
 
+func GetUserHome(userName string) string {
+	usr, err := user.Lookup(userName)
+	if err == nil {
+		return usr.HomeDir
+	}
+
+	return fmt.Sprintf("/home/%s", userName)
+}
+
+func GetMyHome() string {
+	home := os.Getenv("HOME")
+	if home != "" {
+		return home
+	}
+
+	usr, err := user.Current()
+	if err == nil {
+		return usr.HomeDir
+	}
+
+	userName := os.Getenv("USER")
+	if userName == "" {
+		log.Println(err)
+		return ""
+	}
+
+	return GetUserHome(userName)
+}
+
 func PathResolv(base string, s string) string {
-	var err error
 	if len(s) > 0 && s[0] == '~' {
 		a := strings.Split(s, "/")
-		var usr *user.User
 		if a[0] == "~" {
-			usr, err = user.Current()
+			a[0] = GetMyHome()
 		} else {
-			usr, err = user.Lookup(a[0][1:])
+			a[0] = GetUserHome(a[0][1:])
 		}
-		if err != nil {
-			log.Printf("resolv error: %v\n", err)
-		} else {
-			a[0] = usr.HomeDir
-			return filepath.Join(a...)
-		}
+		return filepath.Join(a...)
 	}
 
 	if filepath.IsAbs(s) {
